@@ -134,7 +134,7 @@ FROM bright_tv_user_profile;
 
 --- CREATING A CLEAN BIG TABLE
 
-SELECT DISTINCT
+SELECT 
       UserID,
      CASE
          WHEN Province IS NULL OR TRIM(Province)='' OR LOWER(Province)='none'
@@ -182,7 +182,6 @@ email,
      END AS SM_flag
 
 FROM bright_tv_user_profile;
-
 
 
 

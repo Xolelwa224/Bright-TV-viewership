@@ -201,7 +201,7 @@ CASE
             THEN 'Live Events'
 
         ELSE Channel2
-    END AS tv_channel,
+    END AS tv_channel
 FROM viewership_clean;
 
 --- Time of Day
@@ -265,7 +265,7 @@ LIMIT 20;
 
 --- Big query 
 SELECT
-COALESCE(UserID0,userid4) AS User_ID,
+ User_ID,
 
 TO_DATE(RecordDate2) AS Watch_Date,
 
@@ -332,8 +332,7 @@ DATE_FORMAT(RecordDate2,'HH:mm:ss') AS Watch_Time,
 
     HOUR(RecordDate2) AS hour_of_day
 
-FROM bright_tv_viewership;
-
+FROM viewership_clean;
 
 
 
