@@ -233,30 +233,53 @@ LIMIT 20;
 
 --- Duration Bucket
 
+-- Numeric Duration
 SELECT
+    ROUND(
+        HOUR(`Duration 2`) * 60
+        + MINUTE(`Duration 2`)
+        + SECOND(`Duration 2`) / 60.0,
+        2
+    ) AS duration_minutes,
 
-`Duration 2`,
+    -- Screen Time Bucket
+    CASE
 
-CASE
+        WHEN ROUND(
+            HOUR(`Duration 2`) * 60
+            + MINUTE(`Duration 2`)
+            + SECOND(`Duration 2`) / 60.0,
+            2
+        ) < 5
+            THEN '01. Less than 5 Minutes'
 
-WHEN `Duration 2`
-BETWEEN '00:00:00'
-AND '00:30:00'
+        WHEN ROUND(
+            HOUR(`Duration 2`) * 60
+            + MINUTE(`Duration 2`)
+            + SECOND(`Duration 2`) / 60.0,
+            2
+        ) BETWEEN 5 AND 30
+            THEN '02. 5 - 30 Minutes'
 
-THEN 'Low Usage'
+        WHEN ROUND(
+            HOUR(`Duration 2`) * 60
+            + MINUTE(`Duration 2`)
+            + SECOND(`Duration 2`) / 60.0,
+            2
+        ) BETWEEN 30.01 AND 60
+            THEN '03. 30 - 60 Minutes'
 
-WHEN `Duration 2`
-BETWEEN '00:30:01'
-AND '00:59:59'
+        ELSE '04. More than 60 Minutes'
 
-THEN 'Medium Usage'
+    END AS screen_time_bucket,
 
-ELSE 'High Usage'
+    HOUR(RecordDate2) AS hour_of_day
 
-END AS Duration_Bucket
+FROM viewership_clean;
 
-FROM viewership_clean
-LIMIT 20;
+
+
+
 
 
 
@@ -264,29 +287,30 @@ LIMIT 20;
 
 
 --- Big query 
+CREATE OR REPLACE TEMPORARY TABLE VIEWERSHIP AS
 SELECT
- User_ID,
 
-TO_DATE(RecordDate2) AS Watch_Date,
+    User_ID,
 
-DAYNAME(TO_DATE(RecordDate2)) AS Day_Name,
+    TO_DATE(RecordDate2) AS watch_date,
 
-MONTHNAME(TO_DATE(RecordDate2)) AS Month_Name,
+    DAYNAME(TO_DATE(RecordDate2)) AS day_name,
 
-DATE_FORMAT(RecordDate2,'HH:mm:ss') AS Watch_Time,
+    MONTHNAME(TO_DATE(RecordDate2)) AS month_name,
 
+    DATE_FORMAT(RecordDate2,'HH:mm:ss') AS watch_time,
+
+    
+CASE
+    WHEN DAYNAME(RecordDate2) IN ('Sat', 'Sun') THEN 'Weekend'
+    ELSE 'Weekday'
+END AS day_classification,
     CASE
-        WHEN DAYNAME(RecordDate2) IN ('Sat', 'Sun')
-            THEN 'Weekend'
-        ELSE 'Weekday'
-    END AS day_classification,
-
-
-    CASE
-        WHEN Channel2 IN ('SawSee', 'Sawsee')
+        WHEN Channel2 IN ('SawSee','Sawsee')
             THEN 'SawSee'
 
-        WHEN Channel2 IN (
+        WHEN Channel2 IN
+        (
             'SuperSport Live Events',
             'Live on SuperSport',
             'Supersport Live Events',
@@ -295,44 +319,66 @@ DATE_FORMAT(RecordDate2,'HH:mm:ss') AS Watch_Time,
             THEN 'Live Events'
 
         ELSE Channel2
+
     END AS tv_channel,
 
-    DATE_FORMAT(RecordDate2, 'HH:mm:ss') AS watch_time,
-
     CASE
-        WHEN DATE_FORMAT(RecordDate2, 'HH:mm:ss')
-            BETWEEN '00:00:00' AND '05:59:59'
+        WHEN HOUR(RecordDate2) BETWEEN 0 AND 5
             THEN '01. Midnight'
 
-        WHEN DATE_FORMAT(RecordDate2, 'HH:mm:ss')
-            BETWEEN '06:00:00' AND '11:59:59'
+        WHEN HOUR(RecordDate2) BETWEEN 6 AND 11
             THEN '02. Morning'
 
-        WHEN DATE_FORMAT(RecordDate2, 'HH:mm:ss')
-            BETWEEN '12:00:00' AND '16:59:59'
+        WHEN HOUR(RecordDate2) BETWEEN 12 AND 16
             THEN '03. Afternoon'
 
         ELSE '04. Evening'
+
     END AS time_of_day,
 
-    DATE_FORMAT(`Duration 2`, 'HH:mm:ss') AS duration,
+    -- Numeric Duration
+    ROUND(
+        HOUR(`Duration 2`) * 60
+        + MINUTE(`Duration 2`)
+        + SECOND(`Duration 2`) / 60.0,
+        2
+    ) AS duration_minutes,
 
+    -- Screen Time Bucket
     CASE
-        WHEN `Duration 2` BETWEEN '00:05:00' AND '00:30:00'
-            THEN '01. Low Usage'
 
-        WHEN `Duration 2` BETWEEN '00:30:01' AND '00:59:59'
-            THEN '02. Medium Usage'
+        WHEN ROUND(
+            HOUR(`Duration 2`) * 60
+            + MINUTE(`Duration 2`)
+            + SECOND(`Duration 2`) / 60.0,
+            2
+        ) < 5
+            THEN '01. Less than 5 Minutes'
 
-        WHEN `Duration 2` > '00:59:59'
-            THEN '03. High Usage'
+        WHEN ROUND(
+            HOUR(`Duration 2`) * 60
+            + MINUTE(`Duration 2`)
+            + SECOND(`Duration 2`) / 60.0,
+            2
+        ) BETWEEN 5 AND 30
+            THEN '02. 5 - 30 Minutes'
 
-        ELSE '04. No Usage'
+        WHEN ROUND(
+            HOUR(`Duration 2`) * 60
+            + MINUTE(`Duration 2`)
+            + SECOND(`Duration 2`) / 60.0,
+            2
+        ) BETWEEN 30.01 AND 60
+            THEN '03. 30 - 60 Minutes'
+
+        ELSE '04. More than 60 Minutes'
+
     END AS screen_time_bucket,
 
     HOUR(RecordDate2) AS hour_of_day
 
 FROM viewership_clean;
+
 
 
 

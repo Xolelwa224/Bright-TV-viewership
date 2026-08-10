@@ -92,49 +92,6 @@ FROM duplicates_removed
 WHERE rn = 1;
 
 
-
-
-
-CREATE OR REPLACE TEMPORARY TABLE VIEWERSHIP AS
-SELECT
-    User_ID,
-    TO_DATE(RecordDate2) AS Watch_Date,
-    DAYNAME(TO_DATE(RecordDate2)) AS Day_Name,
-    MONTHNAME(TO_DATE(RecordDate2)) AS Month_Name,
-    DATE_FORMAT(RecordDate2, 'HH:mm:ss') AS Watch_Time,
-    CASE
-        WHEN DAYNAME(RecordDate2) IN ('Sat', 'Sun') THEN 'Weekend'
-        ELSE 'Weekday'
-    END AS day_classification,
-    CASE
-        WHEN Channel2 IN ('SawSee', 'Sawsee') THEN 'SawSee'
-        WHEN Channel2 IN (
-            'SuperSport Live Events',
-            'Live on SuperSport',
-            'Supersport Live Events',
-            'DSTv Events 1'
-        ) THEN 'Live Events'
-        ELSE Channel2
-    END AS tv_channel,
-    CASE
-        WHEN DATE_FORMAT(RecordDate2, 'HH:mm:ss') BETWEEN '00:00:00' AND '05:59:59' THEN '01. Midnight'
-        WHEN DATE_FORMAT(RecordDate2, 'HH:mm:ss') BETWEEN '06:00:00' AND '11:59:59' THEN '02. Morning'
-        WHEN DATE_FORMAT(RecordDate2, 'HH:mm:ss') BETWEEN '12:00:00' AND '16:59:59' THEN '03. Afternoon'
-        ELSE '04. Evening'
-    END AS time_of_day,
-    DATE_FORMAT(`Duration 2`, 'HH:mm:ss') AS duration,
-    CASE
-        WHEN CAST(`Duration 2` AS STRING) BETWEEN '00:05:00' AND '00:30:00' THEN '01. Low Usage'
-        WHEN CAST(`Duration 2` AS STRING) BETWEEN '00:30:01' AND '00:59:59' THEN '02. Medium Usage'
-        WHEN CAST(`Duration 2` AS STRING) > '00:59:59' THEN '03. High Usage'
-        ELSE '04. No Usage'
-    END AS screen_time_bucket,
-    HOUR(RecordDate2) AS hour_of_day
-FROM viewership_clean;
-
-
-
-
 CREATE OR REPLACE TEMPORARY TABLE VIEWERSHIP AS
 SELECT
 
